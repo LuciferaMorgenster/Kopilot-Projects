@@ -1,0 +1,6 @@
+{
+  "name": "Kopilot Projects",
+  "description": "Collaborative SaaS project management platform with real-time tracking, Kanban & Gantt views, time tracking, Slack & Google Drive integrations, and Boekhoudgemak accounting sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
