@@ -448,13 +448,48 @@ export const mockTimeEntries: TimeEntry[] = [
 
 export const initialBoekhoudgemakConfig: BoekhoudgemakConfig = {
   apiUrl: 'https://sandbox-api.boekhoudgemak.nl/v1',
+  targetAppUrl: 'https://boekhoudgemak.applet.local', // User's BoekhoudGemak application from app list
+  appMode: 'app_list_connection',
   environment: 'sandbox',
   apiKey: 'bg_live_token_77a941f89c02_sec',
   administrationCode: 'ADM-0042-NL',
-  autoSync: false,
+  autoSync: true,
   defaultArticleCode: 'UUR-DEV',
   defaultLedgerAccount: '8000',
+  exportFormat: 'exact_xml',
+  connectionStatus: 'connected',
+  lastHandshake: '2026-11-07T18:30:00Z',
   lastSyncTime: '2026-11-04T16:45:00Z',
+  debtorRelations: [
+    {
+      code: 'DEB-8041',
+      name: 'Van Leeuwen Logistics B.V.',
+      email: 'facturen@vanleeuwen.nl',
+      vatNumber: 'NL842109876B01',
+      defaultLedger: '8000',
+    },
+    {
+      code: 'DEB-9120',
+      name: 'Amstel HealthTech Group',
+      email: 'finance@amstelhealth.nl',
+      vatNumber: 'NL991204561B02',
+      defaultLedger: '8000',
+    },
+    {
+      code: 'DEB-3345',
+      name: 'Rotterdam Port Automation N.V.',
+      email: 'crediteuren@portautomation.nl',
+      vatNumber: 'NL112349081B01',
+      defaultLedger: '8000',
+    },
+    {
+      code: 'DEB-5521',
+      name: 'Keizersgracht Capital Partners',
+      email: 'invoices@keizersgracht.nl',
+      vatNumber: 'NL774512990B01',
+      defaultLedger: '8000',
+    },
+  ],
   syncLogs: [
     {
       id: 'log_prev_1',
@@ -467,7 +502,7 @@ export const initialBoekhoudgemakConfig: BoekhoudgemakConfig = {
       invoiceNumber: 'VF-2026-089',
       status: 'success',
       endpoint: 'POST /v1/salesinvoices',
-      message: 'Draft sales invoice concept created with 3 line items. Ledger 8000 credited.',
+      message: 'Draft sales invoice concept created with 3 line items. Ledger 8000 credited in BoekhoudGemak app.',
       payloadPreview: '{"DebtorCode": "DEB-8041", "InvoiceDate": "2026-11-04", "Lines": [{"ArticleCode": "UUR-DEV", "Quantity": 14.5, "UnitPrice": 125.0}]}',
     },
   ],

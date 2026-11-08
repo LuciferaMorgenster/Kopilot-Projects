@@ -25,6 +25,9 @@ export const IntegrationsView: React.FC = () => {
     boekhoudgemakConfig,
     updateBoekhoudgemakConfig,
     syncToBoekhoudgemak,
+    exportExactXML,
+    testAppConnection,
+    syncDebtorsFromBoekhoudGemak,
     slackConfig,
     updateSlackConfig,
     sendSlackMessage,
@@ -34,13 +37,16 @@ export const IntegrationsView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'boekhoudgemak' | 'slack' | 'drive'>('boekhoudgemak');
 
-  // Boekhoudgemak Local Form State
+  // Boekhoudgemak App List Connection & Local Form State
+  const [targetAppUrl, setTargetAppUrl] = useState(boekhoudgemakConfig.targetAppUrl || 'https://boekhoudgemak.applet.local');
   const [apiKey, setApiKey] = useState(boekhoudgemakConfig.apiKey);
   const [adminCode, setAdminCode] = useState(boekhoudgemakConfig.administrationCode);
   const [env, setEnv] = useState<'production' | 'sandbox'>(boekhoudgemakConfig.environment);
   const [articleCode, setArticleCode] = useState(boekhoudgemakConfig.defaultArticleCode);
   const [ledgerCode, setLedgerCode] = useState(boekhoudgemakConfig.defaultLedgerAccount);
   const [handshakeState, setHandshakeState] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+  const [handshakeLatency, setHandshakeLatency] = useState<number | null>(null);
+  const [debtorSyncFeedback, setDebtorSyncFeedback] = useState<string | null>(null);
 
   // Sync Modal State
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -66,6 +72,7 @@ export const IntegrationsView: React.FC = () => {
       : 'https://sandbox-api.boekhoudgemak.nl/v1';
 
     updateBoekhoudgemakConfig({
+      targetAppUrl,
       apiKey,
       administrationCode: adminCode,
       environment: env,
@@ -77,11 +84,23 @@ export const IntegrationsView: React.FC = () => {
     setTimeout(() => setHandshakeState('idle'), 3000);
   };
 
-  const handleTestHandshake = async () => {
+  const handleTestAppListHandshake = async () => {
     setHandshakeState('testing');
-    await new Promise((res) => setTimeout(res, 900));
-    setHandshakeState('success');
-    setTimeout(() => setHandshakeState('idle'), 4000);
+    try {
+      const res = await testAppConnection(targetAppUrl);
+      setHandshakeLatency(res.latencyMs);
+      setHandshakeState('success');
+      setTimeout(() => setHandshakeState('idle'), 5000);
+    } catch {
+      setHandshakeState('failed');
+      setTimeout(() => setHandshakeState('idle'), 4000);
+    }
+  };
+
+  const handleSyncDebtors = async () => {
+    const count = await syncDebtorsFromBoekhoudGemak();
+    setDebtorSyncFeedback(`Succesvol ${count} debiteuren gesynchroniseerd vanuit uw BoekhoudGemak app!`);
+    setTimeout(() => setDebtorSyncFeedback(null), 5000);
   };
 
   const handleExecuteBatchSync = async () => {
@@ -171,63 +190,126 @@ export const IntegrationsView: React.FC = () => {
       {/* Tab 1: Boekhoudgemak WebAPI Integration */}
       {activeTab === 'boekhoudgemak' && (
         <div className="space-y-6">
-          {/* Status and Action Strip */}
-          <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {t.integrations.boekhoudgemak.heading}
-                </h2>
+          {/* Highlighted BoekhoudGemak App-Lijst Bridge Card */}
+          <div className="p-5 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 dark:from-indigo-950/30 dark:via-slate-900 dark:to-purple-950/20 rounded-xl border-2 border-indigo-200 dark:border-indigo-800/60 shadow-xs space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                  BG
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Koppeling met BoekhoudGemak (App Lijst)
+                    </h2>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Actief Verbonden {handshakeLatency ? `(${handshakeLatency}ms)` : ''}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                    Direct compatibel met de <strong>BoekhoudGemak</strong> applicatie in uw app-lijst via de officiële WebAPI v1 &amp; eExact XML standaard.
+                  </p>
+                </div>
               </div>
-              <p className="mt-1 text-xs text-slate-500 max-w-2xl leading-relaxed">
-                {t.integrations.boekhoudgemak.description}
-              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => exportExactXML()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                  title="Download eExact XML bestand voor directe import in BoekhoudGemak"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Download eExact XML</span>
+                </button>
+
+                <button
+                  onClick={handleSyncDebtors}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Sync Debiteuren</span>
+                </button>
+
+                <button
+                  onClick={() => setShowSyncModal(true)}
+                  disabled={unbilledEntries.length === 0}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
+                    unbilledEntries.length > 0
+                      ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                      : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span>Push Facturen ({unbilledEntries.length})</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2.5 shrink-0">
-              <button
-                onClick={handleTestHandshake}
-                disabled={handshakeState === 'testing'}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-semibold transition-colors"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${handshakeState === 'testing' ? 'animate-spin' : ''}`} />
-                <span>{handshakeState === 'testing' ? 'Testing...' : t.integrations.boekhoudgemak.testConnection}</span>
-              </button>
+            {/* Target App URL Configuration & Quick Ping */}
+            <div className="p-3 bg-white/80 dark:bg-slate-900/80 rounded-lg border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex-1 min-w-[280px]">
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                  BoekhoudGemak Applicatie URL (uit uw App Lijst):
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={targetAppUrl}
+                    onChange={(e) => setTargetAppUrl(e.target.value)}
+                    placeholder="https://boekhoudgemak.applet.local of uw applet URL"
+                    className="flex-1 px-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleTestAppListHandshake}
+                    disabled={handshakeState === 'testing'}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-semibold transition-colors shrink-0 flex items-center gap-1"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${handshakeState === 'testing' ? 'animate-spin' : ''}`} />
+                    <span>{handshakeState === 'testing' ? 'Pingen...' : 'Test Verbinding'}</span>
+                  </button>
+                </div>
+              </div>
 
-              <button
-                onClick={() => setShowSyncModal(true)}
-                disabled={unbilledEntries.length === 0}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors ${
-                  unbilledEntries.length > 0
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                    : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-                }`}
-              >
-                <Receipt className="w-4 h-4" />
-                <span>{t.integrations.boekhoudgemak.syncSelectedButton} ({unbilledEntries.length})</span>
-              </button>
+              <div className="sm:text-right shrink-0">
+                <span className="text-[11px] text-slate-400 block mb-1">Status App Koppeling:</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300 font-mono text-[11px]">
+                  Laatste Handshake: {new Date(boekhoudgemakConfig.lastHandshake || Date.now()).toLocaleTimeString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Debtor feedback alert */}
+            {debtorSyncFeedback && (
+              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 rounded-lg text-xs flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{debtorSyncFeedback}</span>
+              </div>
+            )}
+
+            {/* Debtor Relations Synced Preview */}
+            <div className="pt-1">
+              <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block mb-2">
+                Gesynchroniseerde Debiteuren uit BoekhoudGemak ({boekhoudgemakConfig.debtorRelations.length}):
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                {boekhoudgemakConfig.debtorRelations.map((debtor) => (
+                  <div
+                    key={debtor.code}
+                    className="p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 text-[11px]"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{debtor.code}</span>
+                      <span className="text-[10px] text-slate-400 font-mono">Grootboek {debtor.defaultLedger}</span>
+                    </div>
+                    <div className="font-semibold text-slate-900 dark:text-slate-100 truncate mt-0.5">{debtor.name}</div>
+                    <div className="text-slate-400 truncate text-[10px]">{debtor.vatNumber}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-
-          {/* Test Handshake Feedback */}
-          {handshakeState === 'success' && (
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 rounded-xl text-xs flex items-center gap-2 animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>WebAPI v1 Handshake verified with <strong>{boekhoudgemakConfig.apiUrl}</strong>. Administration <strong>{boekhoudgemakConfig.administrationCode}</strong> authenticated.</span>
-            </div>
-          )}
-
-          {/* Sync Success Alert */}
-          {syncFeedback && (
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 rounded-xl text-xs flex items-center justify-between animate-in fade-in">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{syncFeedback}</span>
-              </div>
-              <button onClick={() => setSyncFeedback(null)} className="text-slate-400 hover:text-slate-600">×</button>
-            </div>
-          )}
 
           {/* Staging Area: Unbilled Hours Ready for Boekhoudgemak Batching */}
           <div className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">

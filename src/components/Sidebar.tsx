@@ -145,18 +145,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
       {/* Integration Status Footer Strip */}
       <div className="p-3 mx-3 mb-3 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs text-xs">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            Boekhoudgemak WebAPI
+          <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            BoekhoudGemak App
           </span>
-          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Gekoppeld</span>
         </div>
-        <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-300">
-          <span>{boekhoudgemakConfig.administrationCode}</span>
+        <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
+          <span className="font-mono text-[10px] truncate max-w-[110px]">{boekhoudgemakConfig.administrationCode}</span>
           <button
             onClick={() => handleSelectTab('integrations')}
-            className="text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-0.5"
+            className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline inline-flex items-center gap-0.5 text-[11px]"
           >
-            Sync <ChevronRight className="w-3 h-3" />
+            Koppeling <ChevronRight className="w-3 h-3" />
           </button>
         </div>
       </div>

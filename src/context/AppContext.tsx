@@ -80,6 +80,9 @@ interface AppContextType {
   boekhoudgemakConfig: BoekhoudgemakConfig;
   updateBoekhoudgemakConfig: (config: Partial<BoekhoudgemakConfig>) => void;
   syncToBoekhoudgemak: (entryIds?: string[]) => Promise<{ success: boolean; invoiceNumber: string; totalAmount: number; count: number }>;
+  exportExactXML: (entryIds?: string[]) => void;
+  testAppConnection: (url?: string) => Promise<{ success: boolean; message: string; latencyMs: number }>;
+  syncDebtorsFromBoekhoudGemak: () => Promise<number>;
 
   slackConfig: SlackConfig;
   updateSlackConfig: (config: Partial<SlackConfig>) => void;
@@ -591,6 +594,189 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, invoiceNumber, totalAmount, count: targetEntries.length };
   };
 
+  // eExact XML Export (Standard format for BoekhoudGemak and Multivers desktop/cloud app)
+  const exportExactXML = (entryIds?: string[]) => {
+    const targetEntries = timeEntries.filter((e) => {
+      if (entryIds && entryIds.length > 0) {
+        return entryIds.includes(e.id) && e.billable;
+      }
+      return e.billable && !e.syncedToBoekhoudgemak;
+    });
+
+    if (targetEntries.length === 0) {
+      addNotification({
+        title: 'Export Aborted',
+        message: 'No unbilled hours available for eExact XML generation.',
+        type: 'accounting',
+      });
+      return;
+    }
+
+    const invoiceNumber = `VF-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    const today = new Date().toISOString().split('T')[0];
+
+    // Build eExact XML conforming to Exact Boekhoud Gemak schema
+    const xmlLines = targetEntries.map((e, index) => {
+      const lineTotal = (e.hours * e.hourlyRate).toFixed(2);
+      return `      <InvoiceLine line="${index + 1}">
+        <Description>${escapeXml(`${e.projectName} - ${e.taskTitle}: ${e.description}`)}</Description>
+        <Item code="${escapeXml(boekhoudgemakConfig.defaultArticleCode)}"/>
+        <Quantity>${e.hours.toFixed(2)}</Quantity>
+        <Price>
+          <Currency code="EUR"/>
+          <Value>${e.hourlyRate.toFixed(2)}</Value>
+        </Price>
+        <Amount>
+          <Currency code="EUR"/>
+          <Value>${lineTotal}</Value>
+        </Amount>
+        <GLAccount code="${escapeXml(boekhoudgemakConfig.defaultLedgerAccount)}"/>
+        <VAT code="21" type="I">
+          <Rate>0.21</Rate>
+        </VAT>
+      </InvoiceLine>`;
+    }).join('\n');
+
+    const project = projects.find((p) => p.id === targetEntries[0].projectId);
+    const debtorCode = project ? project.debtorCode : 'DEB-8041';
+    const debtorName = project ? project.clientName : 'Client Relatie';
+
+    const xmlContent = `<?xml version="1.0" encoding="utf-8"?>
+<eExact xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="eExact-XML.xsd">
+  <Invoices>
+    <Invoice status="C" type="V">
+      <Journal code="70" type="S">
+        <Description>Verkoopboek</Description>
+      </Journal>
+      <InvoiceNumber>${invoiceNumber}</InvoiceNumber>
+      <InvoiceDate>${today}</InvoiceDate>
+      <DueDate>${new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]}</DueDate>
+      <Debtor code="${escapeXml(debtorCode)}">
+        <Name>${escapeXml(debtorName)}</Name>
+      </Debtor>
+      <PaymentCondition code="14D">
+        <Description>Binnen 14 dagen netto</Description>
+      </PaymentCondition>
+      <Administration code="${escapeXml(boekhoudgemakConfig.administrationCode)}"/>
+      <InvoiceLines>
+${xmlLines}
+      </InvoiceLines>
+    </Invoice>
+  </Invoices>
+</eExact>`;
+
+    // Download XML Blob
+    const blob = new Blob([xmlContent], { type: 'application/xml;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `eExact-BoekhoudGemak-${invoiceNumber}-${today}.xml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Record sync log
+    const totalAmount = targetEntries.reduce((s, e) => s + e.hours * e.hourlyRate, 0);
+    const syncLog = {
+      id: `log_xml_${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      entriesCount: targetEntries.length,
+      totalHours: targetEntries.reduce((s, e) => s + e.hours, 0),
+      totalAmount,
+      debtorCode,
+      debtorName,
+      invoiceNumber,
+      status: 'success' as const,
+      endpoint: 'eExact-XML File Export',
+      message: `Standard eExact XML batch generated for BoekhoudGemak app import. ${targetEntries.length} items billed.`,
+      payloadPreview: xmlContent,
+    };
+
+    setBoekhoudgemakConfig((prev) => ({
+      ...prev,
+      lastSyncTime: new Date().toISOString(),
+      syncLogs: [syncLog, ...prev.syncLogs],
+    }));
+
+    addNotification({
+      title: 'eExact XML Exported for BoekhoudGemak',
+      message: `Generated XML batch ${invoiceNumber} for import into your BoekhoudGemak application.`,
+      type: 'accounting',
+    });
+  };
+
+  // Test connection to user's BoekhoudGemak app from app list
+  const testAppConnection = async (customUrl?: string) => {
+    const targetUrl = customUrl || boekhoudgemakConfig.targetAppUrl;
+    setBoekhoudgemakConfig((prev) => ({ ...prev, connectionStatus: 'testing' }));
+
+    const start = Date.now();
+    // Simulate real handshake with user's app
+    await new Promise((res) => setTimeout(res, 600));
+    const latencyMs = Date.now() - start;
+
+    setBoekhoudgemakConfig((prev) => ({
+      ...prev,
+      connectionStatus: 'connected',
+      targetAppUrl: targetUrl,
+      lastHandshake: new Date().toISOString(),
+    }));
+
+    addNotification({
+      title: 'BoekhoudGemak App Connected',
+      message: `Verified handshake with "${targetUrl}" (${latencyMs}ms latency). App-to-app bridge ready.`,
+      type: 'accounting',
+    });
+
+    return {
+      success: true,
+      message: `Connected to BoekhoudGemak application at ${targetUrl}`,
+      latencyMs,
+    };
+  };
+
+  // Sync Debtors & Relations from user's BoekhoudGemak app
+  const syncDebtorsFromBoekhoudGemak = async () => {
+    await new Promise((res) => setTimeout(res, 500));
+    // Simulated fetched relations from BoekhoudGemak
+    const newRelations = [
+      { code: 'DEB-8041', name: 'Van Leeuwen Logistics B.V.', email: 'facturen@vanleeuwen.nl', vatNumber: 'NL842109876B01', defaultLedger: '8000' },
+      { code: 'DEB-9120', name: 'Amstel HealthTech Group', email: 'finance@amstelhealth.nl', vatNumber: 'NL991204561B02', defaultLedger: '8000' },
+      { code: 'DEB-3345', name: 'Rotterdam Port Automation N.V.', email: 'crediteuren@portautomation.nl', vatNumber: 'NL112349081B01', defaultLedger: '8000' },
+      { code: 'DEB-5521', name: 'Keizersgracht Capital Partners', email: 'invoices@keizersgracht.nl', vatNumber: 'NL774512990B01', defaultLedger: '8000' },
+      { code: 'DEB-7104', name: 'Delft Robotics Consortium B.V.', email: 'accounting@delftrobotics.nl', vatNumber: 'NL883401923B01', defaultLedger: '8000' },
+    ];
+
+    setBoekhoudgemakConfig((prev) => ({
+      ...prev,
+      debtorRelations: newRelations,
+      lastHandshake: new Date().toISOString(),
+    }));
+
+    addNotification({
+      title: 'Debtors Synced from BoekhoudGemak',
+      message: `Loaded ${newRelations.length} relations from your BoekhoudGemak app.`,
+      type: 'accounting',
+    });
+
+    return newRelations.length;
+  };
+
+  // Helper XML escape
+  function escapeXml(unsafe: string) {
+    return unsafe.replace(/[<>&'"]/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '\'': return '&apos;';
+        case '"': return '&quot;';
+        default: return c;
+      }
+    });
+  }
+
   // Slack Integration
   const updateSlackConfig = (cfg: Partial<SlackConfig>) => {
     setSlackConfig((prev) => ({ ...prev, ...cfg }));
@@ -722,6 +908,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         boekhoudgemakConfig,
         updateBoekhoudgemakConfig,
         syncToBoekhoudgemak,
+        exportExactXML,
+        testAppConnection,
+        syncDebtorsFromBoekhoudGemak,
 
         slackConfig,
         updateSlackConfig,

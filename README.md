@@ -1,68 +1,71 @@
-# Kopilot Projects – Collaborative Project Management & Accounting Hub
+# Kopilot Projects – Collaborative Project Management & BoekhoudGemak Hub
 
-![Kopilot Projects Dashboard Cover](/src/assets/images/kopilot_cover_showcase_1794106920980.jpg)
+![Kopilot Projects & BoekhoudGemak Cover](/src/assets/images/kopilot_boekhoudgemak_cover_1794108528969.jpg)
 
-> An enterprise-grade, GDPR-compliant collaborative project management platform built for agile delivery teams, consultancies, and digital agencies. Features multi-view sprint tracking (Kanban, Gantt, and tabular list), precision billable time tracking, Slack real-time notifications, Google Drive file management, and direct WebAPI v1 synchronization with **Boekhoudgemak (Exact)** accounting.
+<div align="center">
 
----
+**[English](#-english) | [Nederlands](#-nederlands)**
 
-## 🌟 Key Features
+[![Donate with PayPal](https://img.shields.io/badge/Support_Project-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/donate/?business=luciferamorgenster@gmail.com&no_recurring=0&currency_code=EUR)
 
-### 1. Real-Time Collaboration & Peer Presence
-- **Live Collaborator Pulse**: Instant visual indicators showing active team members, currently viewed sections, and real-time task editing statuses.
-- **Optimistic State Updates**: Seamless drag-and-drop task movements and status transitions across sprint columns.
-- **In-App Notification Center**: Instant alert feed with unread counters, category filtering, and sound chimes for task completions and accounting batches.
-
-### 2. Multi-View Workspace
-- **Interactive Kanban Board**: 5-stage sprint workflow (Backlog, To Do, In Progress, Review, Completed) with unboxed clean metadata, priority tags, billable rate markers, and 1-click status transitions.
-- **Gantt Milestone Timeline**: Interactive project phase scheduling across multi-week horizons with milestone flags, progress completion sliders, and critical delivery paths.
-- **High-Density Task Grid**: Tabular view optimized for fast sorting, batch actions, assignee audits, and single-click CSV data exports.
-
-### 3. Precision Time Tracking & Timesheets
-- **Global & Task Stopwatch**: Persistent live timer in the top navigation bar with play, pause, resume, and stop controls.
-- **Weekly Timesheet Matrix**: Day-by-day 7-day breakdown of logged hours with billable ratio calculation.
-- **Manual Time Entry**: Fast dialog for logging historical hours with project attribution and client rate calculations.
-
-### 4. Direct Boekhoudgemak (Exact) Accounting Synchronization
-- **WebAPI v1 Direct Integration**: Built against `api.boekhoudgemak.nl/v1` (with sandbox testing against `sandbox-api.boekhoudgemak.nl/v1`).
-- **Debtor & Project Mapping**: Connect project codes with Boekhoudgemak debtor relations (`DebtorCode`, e.g. `DEB-8041`).
-- **Concept Sales Invoices (*Concept Verkoopfacturen*)**: Automatically package unbilled billable hours into draft sales invoice batches with line-item descriptions, default article codes (`UUR-DEV`), and ledger accounts (`8000`).
-- **Full Audit Trail**: Inspect detailed JSON payloads, HTTP 201 Created responses, and transaction timestamps.
-
-### 5. Slack & Google Drive Integrations
-- **Slack Incoming Webhooks**: Automated notification broadcasts to channels (e.g. `#dev-team`, `#billing`) upon task completions, milestone deadlines, and invoice generation.
-- **Google Drive File Hub**: Link Google Docs, Sheets, and design files directly to tasks with interactive file picking, cloud storage indicators, and quick external links.
-
-### 6. GDPR / AVG Compliance & Data Privacy
-- **Consent Preference Center**: Granular cookie banner categorizing Strictly Necessary, Productivity Analytics, and External Cloud Integrations.
-- **Article 20 (Right to Data Portability)**: One-click export of a standardized machine-readable JSON archive containing all user projects, tasks, time logs, and audit trails.
-- **Article 17 (Right to Erasure)**: Dedicated workflow to permanently purge personal workspace data.
-- **Data Processing Addendum (DPA)**: Standardized EU-GDPR security compliance posture.
-
-### 7. Multilingual & Dual-Theme UI
-- **English Default with Instant Dutch (Nederlands) Toggle**: Comprehensive i18n dictionary covering every UI string, status, and accounting term.
-- **Tailwind CSS v4 Dark & Light Modes**: Seamless visual contrast configured with `@custom-variant dark`.
+</div>
 
 ---
 
-## 🛠️ Technology Stack
+## 💖 Support & Sponsor This Project
 
-- **Framework**: React 19 SPA with TypeScript
-- **Styling**: Tailwind CSS v4 with custom dark mode variants and `@import "tailwindcss";`
-- **Icons**: Lucide React
-- **Animations & Transitions**: CSS transitions + smooth backdrop filters
-- **Typography**: Plus Jakarta Sans & JetBrains Mono (via Google Fonts)
-- **Bundler & Dev Server**: Vite 8 & TSX
+If you find Kopilot Projects helpful for managing your agile projects, tracking billable time, or synchronizing with your **BoekhoudGemak** accounting application, consider supporting ongoing development:
+
+- **PayPal Account**: [`luciferamorgenster@gmail.com`](mailto:luciferamorgenster@gmail.com)
+- **Direct Donation Link**: [**Donate via PayPal to luciferamorgenster@gmail.com**](https://www.paypal.com/donate/?business=luciferamorgenster@gmail.com&no_recurring=0&currency_code=EUR)
+
+Your support helps fund continuous improvements, real-time collaboration updates, and new Dutch accounting integrations!
 
 ---
 
-## 🚀 Getting Started
+<a name="-english"></a>
+## 🇬🇧 English
 
-### Prerequisites
-- Node.js 20+
-- npm or yarn
+### Overview
+**Kopilot Projects** is an enterprise-grade, responsive, and GDPR/AVG-compliant SaaS project management platform. Designed for agile teams, agencies, and consultancies, it unifies task execution with automated client billing through a direct connection with the **BoekhoudGemak** application in your app list.
 
-### Installation & Run
+### 🌟 Key Features
+
+1. **Direct BoekhoudGemak App Compatibility**:
+   - **App-to-App Bridge**: Configure the URL of your BoekhoudGemak application from your app list (e.g. `https://boekhoudgemak.applet.local` or cloud URL) with live connection ping and millisecond latency tracking.
+   - **Debtor & Relation Sync**: Pull client debtors directly from your BoekhoudGemak app into your project workspace.
+   - **eExact XML Batch Export**: Generate and download standard `eExact XML` files containing sales invoices (*concept verkoopfacturen*), journal codes, ledger accounts (`8000`), and VAT rates ready for drag-and-drop import into BoekhoudGemak.
+   - **Direct WebAPI v1 Dispatch**: Push unbilled hours with line items and debtor references straight to the API endpoint.
+
+2. **Real-Time Collaboration & Presence**:
+   - Active collaborator cluster showing live peer presence (active, viewing, or editing).
+   - Instant in-app notification center with unread counts and sound notifications.
+
+3. **Multi-View Execution**:
+   - **Kanban Sprint Board**: 5 columns (*Backlog*, *To Do*, *In Progress*, *Review*, *Done*) with clean unboxed metadata, priority flags, billable tags, and Google Drive links.
+   - **Gantt Milestone Timeline**: Multi-week visual schedule with milestone markers, progress completion sliders, and critical delivery paths.
+   - **High-Density Task Grid**: Tabular task audit view with multi-field sorting, inline status controls, and CSV export.
+
+4. **Precision Time Tracking & Productivity Analytics**:
+   - Persistent digital stopwatch ticker in the navigation bar with start, pause, resume, and stop actions.
+   - Weekly 7-day timesheet grid with billable efficiency percentage calculations.
+   - Team member utilization reports with individual billable ratios, financial yield in EUR, and CSV datasets.
+
+5. **External Cloud Integrations**:
+   - **Slack Webhooks**: Automated broadcast notifications to `#dev-team` or `#billing` when tasks finish, milestones are reached, or invoices are staged.
+   - **Google Drive**: Cloud storage meter, file explorer modal, and 1-click attachment of Google Docs, Sheets, and design files to tasks.
+
+6. **GDPR / AVG Compliance**:
+   - Granular cookie and privacy consent banner (Strictly Necessary, Analytics, Integrations).
+   - **Article 20 Data Portability**: Machine-readable JSON download of all projects, tasks, time entries, and audit logs.
+   - **Article 17 Right to Erasure**: Permanent purge routine for local workspace data.
+   - European DPA compliance and TLS 1.3 encryption documentation.
+
+7. **Multilingual & Dual-Theme UI**:
+   - English default with instant toggle to Dutch (Nederlands).
+   - Clean dark and light mode built with Tailwind CSS v4 `@custom-variant dark`.
+
+### Quick Start
 
 ```bash
 # Clone the repository
@@ -76,34 +79,56 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:3000` in your browser.
+---
+
+<a name="-nederlands"></a>
+## 🇳🇱 Nederlands
+
+### Overzicht
+**Kopilot Projects** is een modern, AVG-conform projectbeheerplatform met realtime samenwerking, gedetailleerde tijdregistratie en een directe koppeling met de **BoekhoudGemak** applicatie uit uw app-lijst.
+
+### 🌟 Belangrijkste Functionaliteiten
+
+1. **Compatibiliteit met BoekhoudGemak App**:
+   - **App-naar-App Koppeling**: Koppel rechtstreeks met uw BoekhoudGemak applicatie via het App-to-App protocol. Voer eenvoudig de URL in en test de verbinding direct via de ping-functie.
+   - **eExact XML Export**: Genereer met één klik een officieel `eExact XML` bestand voor directe import in uw BoekhoudGemak app (inclusief debiteurcodes, omzetrekening `8000`, uursoort `UUR-DEV` en btw).
+   - **Debiteuren Synchronisatie**: Haal automatisch debiteuren op uit BoekhoudGemak en koppel ze aan uw projecten.
+   - **Concept Verkoopfacturen**: Bundel openstaande declarabele uren automatisch tot concept facturen.
+
+2. **Realtime Samenwerking & Aanwezigheid**:
+   - Live teamledenindicator: zie in één oogopslag wie actief is, wie kaarten bewerkt en wie tijd registreert.
+   - Geautomatiseerde notificaties bij voltooide taken, behaalde mijlpalen en factuurbatches.
+
+3. **Flexibele Weergaven**:
+   - **Kanban Sprintbord**: 5 kolommen (*Backlog*, *Te Doen*, *In Behandeling*, *In Review*, *Afgerond*) met overzichtelijke typografie en statusknoppen.
+   - **Gantt Tijdlijn**: Meerfasige planning met mijlpaalmarkeringen en voortgangsschuifregelaars.
+   - **Geavanceerd Takenrooster**: Snelle gegevenstabel met sorteeropties en CSV-export.
+
+4. **Gedetailleerde Tijdregistratie & Rapportages**:
+   - Digitale stopwatch in de bovenbalk met live secondenteller.
+   - 7-daags wekelijks urenoverzicht met declarabiliteitspercentages.
+   - Financiële rapportages met teambezetting, uurtarieven en opbrengst in euro's.
+
+5. **Cloud-Koppelingen (Slack & Google Drive)**:
+   - **Slack Webhooks**: Automatische alerts in Slack-kanalen bij taakafronding en facturatie.
+   - **Google Drive**: Koppel specificaties, spreadsheets en presentaties direct aan taken.
+
+6. **Privacy & AVG / GDPR**:
+   - Cookie- en privacyvoorkeurenbanner met fijnmazige categorieën.
+   - **Artikel 20 Dataportabiliteit**: Download een compleet JSON-archief van uw werkruimte.
+   - **Artikel 17 Recht op Vergetelheid**: Wis persoonlijke werkruimtegegevens met één klik.
 
 ---
 
-## 🔌 Boekhoudgemak WebAPI Configuration
+## ☕ Sponsor & Ondersteun dit Project
 
-To connect your Boekhoudgemak administration:
+Vindt u Kopilot Projects waardevol? U kunt het project sponsoren via PayPal:
 
-1. Open **Integrations Hub** from the left navigation and select the **Boekhoudgemak (Exact)** tab.
-2. Select your environment:
-   - **Production**: `https://api.boekhoudgemak.nl/v1`
-   - **Sandbox**: `https://sandbox-api.boekhoudgemak.nl/v1`
-3. Enter your **Administration Code** (e.g. `ADM-0042-NL`) and your **API Key / Bearer Token**.
-4. Configure default ledger codes (e.g. `8000` for revenue) and default article codes (e.g. `UUR-DEV`).
-5. Click **Test API Handshake** to verify connectivity.
-6. Under **Unbilled Hours Staging**, click **Push Staged Hours to Boekhoudgemak** to generate draft invoices.
+- **PayPal Rekening**: [`luciferamorgenster@gmail.com`](mailto:luciferamorgenster@gmail.com)
+- **Directe Donatielink**: [**Ondersteun via PayPal naar luciferamorgenster@gmail.com**](https://www.paypal.com/donate/?business=luciferamorgenster@gmail.com&no_recurring=0&currency_code=EUR)
 
 ---
 
-## 🔒 GDPR / AVG Privacy Principles
+## 📄 Licentie
 
-Kopilot Projects adheres strictly to the EU General Data Protection Regulation (AVG in the Netherlands):
-- **Local Storage Isolation**: Personal tokens and workspace entries are safely cached client-side without third-party ad tracking.
-- **Portability**: Export all your data at any time in standard JSON via **Privacy & GDPR > Export Personal Data**.
-- **Erasure**: Permanently purge all local workspace state via **Privacy & GDPR > Purge Workspace Data**.
-
----
-
-## 📄 License
-
-Licensed under the Apache-2.0 License.
+Gelicenseerd onder de Apache-2.0 Licentie.

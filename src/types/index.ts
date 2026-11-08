@@ -107,15 +107,29 @@ export interface BoekhoudgemakSyncLog {
   payloadPreview?: string;
 }
 
+export interface DebtorRelation {
+  code: string;
+  name: string;
+  email: string;
+  vatNumber: string;
+  defaultLedger: string;
+}
+
 export interface BoekhoudgemakConfig {
   apiUrl: string;
+  targetAppUrl: string; // The URL of the user's BoekhoudGemak application from their app list
+  appMode: 'app_list_connection' | 'direct_webapi';
   environment: 'production' | 'sandbox';
   apiKey: string;
   administrationCode: string;
   autoSync: boolean;
   defaultArticleCode: string; // e.g. "HOUR-DEV"
   defaultLedgerAccount: string; // e.g. "8000" (Omzet verkopen)
+  exportFormat: 'exact_xml' | 'ubl_json' | 'rest_api';
+  connectionStatus: 'connected' | 'disconnected' | 'testing';
+  lastHandshake?: string;
   lastSyncTime?: string;
+  debtorRelations: DebtorRelation[];
   syncLogs: BoekhoudgemakSyncLog[];
 }
 
